@@ -28,38 +28,28 @@ std::optional<std::vector<int64_t>> broadcastShape(const std::vector<int64_t> &a
 
     int diff = higherdimensional.size() - lowerdimensional.size();
 
-    for (int i = 0; i < diff; i++)
-    {
-        lowerdimensional.insert(lowerdimensional.begin(), (int64_t)1);
-    }
-
-    bool valid = true;
-
-    std::vector<int64_t> final_shape;
+    std::vector<int64_t> final_shape(higherdimensional.size());
     std::optional<std::vector<int64_t>> broadcast_output;
 
-    for (int i = 0; i < higherdimensional.size(); i++)
+    for (int i = 0; i < diff; i++)
     {
-        if (higherdimensional[i] == lowerdimensional[i] || higherdimensional[i] == 1 || lowerdimensional[i] == 1)
+        final_shape[i] = higherdimensional[i];
+    }
+
+    for (size_t i = diff; i < higherdimensional.size(); i++)
+    {
+        if (higherdimensional[i] == lowerdimensional[i - diff] || higherdimensional[i] == 1 || lowerdimensional[i - diff] == 1)
         {
-            final_shape.push_back(higherdimensional[i] > lowerdimensional[i] ? higherdimensional[i] : lowerdimensional[i]);
+            final_shape[i] = (higherdimensional[i] > lowerdimensional[i - diff] ? higherdimensional[i] : lowerdimensional[i - diff]);
         }
         else
         {
-            valid = false;
-            break;
+            return std::nullopt;
         }
     }
 
-    if (valid)
-    {
-        broadcast_output = final_shape;
-        return broadcast_output;
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    broadcast_output = final_shape;
+    return broadcast_output;
 }
 
 // int main()
